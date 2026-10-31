@@ -24,7 +24,7 @@ export function handleOptions(request: Request): Response | null {
 export async function readJson(request: Request): Promise<Record<string, unknown>> {
   const text = await request.text();
   if (new TextEncoder().encode(text).byteLength > 16 * 1024) {
-    throw new RequestError(413, 'Request body is too large.');
+    throw new RequestError(413, 'Размер запроса слишком велик.');
   }
   try {
     const body: unknown = JSON.parse(text);
@@ -33,7 +33,7 @@ export async function readJson(request: Request): Promise<Record<string, unknown
     }
     return body as Record<string, unknown>;
   } catch {
-    throw new RequestError(400, 'Request body must be a JSON object.');
+    throw new RequestError(400, 'Не удалось прочитать данные запроса.');
   }
 }
 
@@ -183,5 +183,7 @@ export async function supabaseRequest(url: string, init: RequestInit = {}): Prom
 export function errorResponse(error: unknown): Response {
   if (error instanceof RequestError) return jsonResponse(error.status, { error: error.message });
   console.error('Supabase gallery function failed:', error);
-  return jsonResponse(500, { error: 'The gallery could not complete the request. Check function configuration.' });
+  return jsonResponse(500, {
+    error: 'Не удалось выполнить запрос. Проверьте настройки Supabase Functions.',
+  });
 }

@@ -21,15 +21,17 @@ Deno.serve(async (request: Request) => {
   if (options) return options;
 
   try {
-    if (request.method !== 'POST') return jsonResponse(405, { error: 'Method not allowed.' });
+    if (request.method !== 'POST') {
+      return jsonResponse(405, { error: 'Метод запроса не поддерживается.' });
+    }
     if (!await isAuthenticated(request, sessionSecret())) {
-      return jsonResponse(401, { error: 'Please sign in before uploading artwork.' });
+      return jsonResponse(401, { error: 'Войдите в мастерскую, чтобы загрузить работу.' });
     }
 
     const body = await readJson(request);
     const extension = typeof body.contentType === 'string' ? extensions.get(body.contentType) : null;
     if (!extension || typeof body.fileName !== 'string' || body.fileName.length > 255) {
-      return jsonResponse(400, { error: 'Choose a JPG, PNG, or WebP image.' });
+      return jsonResponse(400, { error: 'Выберите изображение в формате JPG, PNG или WebP.' });
     }
 
     const imagePath = `uploads/${crypto.randomUUID()}.${extension}`;

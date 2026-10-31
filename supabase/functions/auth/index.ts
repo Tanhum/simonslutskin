@@ -21,7 +21,7 @@ Deno.serve(async (request: Request) => {
       return jsonResponse(200, { authenticated: await isAuthenticated(request, signingSecret) });
     }
     if (request.method !== 'POST') {
-      return jsonResponse(405, { error: 'Method not allowed.' });
+      return jsonResponse(405, { error: 'Метод запроса не поддерживается.' });
     }
 
     const url = new URL(request.url);
@@ -29,7 +29,7 @@ Deno.serve(async (request: Request) => {
       return jsonResponse(200, { authenticated: false });
     }
     if (url.searchParams.get('action') !== 'login') {
-      return jsonResponse(404, { error: 'Authentication route not found.' });
+      return jsonResponse(404, { error: 'Маршрут авторизации не найден.' });
     }
 
     const body = await readJson(request);
@@ -40,7 +40,7 @@ Deno.serve(async (request: Request) => {
       constantTimeEqual(password, requiredSecret('ADMIN_PASSWORD')),
     ]);
     if (!usernameMatches || !passwordMatches) {
-      return jsonResponse(401, { error: 'The username or password was not accepted.' });
+      return jsonResponse(401, { error: 'Неверное имя пользователя или пароль.' });
     }
 
     return jsonResponse(200, {

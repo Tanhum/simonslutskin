@@ -53,9 +53,11 @@ Deno.serve(async (request: Request) => {
       if (!Array.isArray(rows)) throw new Error('Supabase returned an invalid artwork collection.');
       return jsonResponse(200, rows.map((row) => toArtwork(row as ArtworkRow)));
     }
-    if (request.method !== 'POST') return jsonResponse(405, { error: 'Method not allowed.' });
+    if (request.method !== 'POST') {
+      return jsonResponse(405, { error: 'Метод запроса не поддерживается.' });
+    }
     if (!await isAuthenticated(request, sessionSecret())) {
-      return jsonResponse(401, { error: 'Please sign in before adding artwork.' });
+      return jsonResponse(401, { error: 'Войдите в мастерскую, чтобы добавить работу.' });
     }
 
     const body = await readJson(request);
@@ -63,12 +65,12 @@ Deno.serve(async (request: Request) => {
     for (const field of fields) {
       const value = typeof body[field] === 'string' ? body[field].trim() : '';
       if (!value || value.length > limits[field]) {
-        return jsonResponse(400, { error: 'Complete every artwork detail within the allowed lengths.' });
+        return jsonResponse(400, { error: 'Заполните все поля, соблюдая ограничения по длине.' });
       }
       artwork[field] = value;
     }
     if (typeof body.imagePath !== 'string' || !imagePathPattern.test(body.imagePath)) {
-      return jsonResponse(400, { error: 'The uploaded image could not be verified.' });
+      return jsonResponse(400, { error: 'Не удалось проверить загруженное изображение.' });
     }
 
     const rows = await supabaseRequest(`${baseUrl}/rest/v1/artworks`, {
