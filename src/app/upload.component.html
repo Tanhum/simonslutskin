@@ -1,19 +1,19 @@
 <section class="upload-page">
   <div class="page-heading">
-    <p class="eyebrow">The artist’s studio</p>
-    <h1>Add a new <em>work.</em></h1>
-    <p class="page-intro">A quiet place to keep the collection growing.</p>
+    <p class="eyebrow">Мастерская художника</p>
+    <h1>Новая <em>работа.</em></h1>
+    <p class="page-intro">Место, где коллекция продолжает расти.</p>
   </div>
 
   @if (checkingAccess()) {
-    <p class="status-message" role="status">Checking artist access…</p>
+    <p class="status-message" role="status">Проверяем доступ в мастерскую…</p>
   } @else if (!authenticated()) {
     <section class="access-card">
       <span class="lock-mark" aria-hidden="true">✳</span>
-      <h2>Artist access</h2>
-      <p>This space is reserved for Simon. Enter your username and password to continue.</p>
+      <h2>Вход в мастерскую</h2>
+      <p>Это пространство художника. Введите имя пользователя и пароль.</p>
       <form (ngSubmit)="signIn()">
-        <label for="username">Username</label>
+        <label for="username">Имя пользователя</label>
         <input
           id="username"
           name="username"
@@ -22,7 +22,7 @@
           autocomplete="username"
           required
         />
-        <label for="password">Password</label>
+        <label for="password">Пароль</label>
         <input
           id="password"
           name="password"
@@ -35,31 +35,31 @@
           <p class="form-error" role="alert">{{ loginError() }}</p>
         }
         <button class="primary-button" type="submit" [disabled]="signingIn()">
-          {{ signingIn() ? 'Checking…' : 'Enter the studio' }}
+          {{ signingIn() ? 'Проверяем…' : 'Войти в мастерскую' }}
           <span aria-hidden="true">→</span>
         </button>
       </form>
-      <a class="back-link" routerLink="/">← Back to the gallery</a>
+      <a class="back-link" routerLink="/">← Вернуться в галерею</a>
     </section>
   } @else {
     <section class="editor-card">
       <div class="editor-heading">
         <div>
-          <h2>Artwork details</h2>
-          <p>Share a new piece with the collection.</p>
+          <h2>О новой работе</h2>
+          <p>Добавьте произведение в авторскую коллекцию.</p>
         </div>
-        <button type="button" class="sign-out" (click)="signOut()">Sign out</button>
+        <button type="button" class="sign-out" (click)="signOut()">Выйти</button>
       </div>
 
       <form class="artwork-form" (ngSubmit)="addArtwork()">
         <label class="image-picker" for="image">
           @if (imagePreview()) {
-            <img class="preview-image" [src]="imagePreview()" alt="Preview of selected artwork" />
-            <span class="change-image">Choose a different image</span>
+            <img class="preview-image" [src]="imagePreview()" alt="Предварительный просмотр изображения работы" />
+            <span class="change-image">Выбрать другое изображение</span>
           } @else {
             <span class="upload-icon" aria-hidden="true">↑</span>
-            <strong>Choose an artwork image</strong>
-            <span>JPG, PNG, or WebP · up to 10 MB</span>
+            <strong>Загрузить изображение работы</strong>
+            <span>JPG, PNG или WebP · до 10 МБ</span>
           }
         </label>
         <input
@@ -73,44 +73,44 @@
 
         <div class="field-grid">
           <div class="field">
-            <label for="title">Artwork name <span>*</span></label>
+            <label for="title">Название работы <span>*</span></label>
             <input id="title" name="title" [(ngModel)]="details.title" maxlength="120" required />
           </div>
           <div class="field">
-            <label for="artist">Artist name <span>*</span></label>
+            <label for="artist">Имя художника <span>*</span></label>
             <input id="artist" name="artist" [(ngModel)]="details.artist" maxlength="100" required />
           </div>
           <div class="field">
-            <label for="size">Size <span>*</span></label>
+            <label for="size">Размер <span>*</span></label>
             <input
               id="size"
               name="size"
               [(ngModel)]="details.size"
-              placeholder="e.g. 60 × 80 cm"
+              placeholder="Например, 60 × 80 см"
               maxlength="60"
               required
             />
           </div>
           <div class="field">
-            <label for="style">Style or medium <span>*</span></label>
+            <label for="style">Стиль или техника <span>*</span></label>
             <input
               id="style"
               name="style"
               [(ngModel)]="details.style"
-              placeholder="e.g. Oil on canvas"
+              placeholder="Например, масло на холсте"
               maxlength="80"
               required
             />
           </div>
           <div class="field field-wide">
-            <label for="description">Description <span>*</span></label>
+            <label for="description">Описание <span>*</span></label>
             <textarea
               id="description"
               name="description"
               [(ngModel)]="details.description"
               rows="4"
               maxlength="1000"
-              placeholder="A few words about this work…"
+              placeholder="Расскажите об этой работе…"
               required
             ></textarea>
           </div>
@@ -123,7 +123,7 @@
           <p class="form-success" role="status">{{ uploadSuccess() }}</p>
         }
         <button class="primary-button submit-button" type="submit" [disabled]="submitting()">
-          {{ submitting() ? 'Adding artwork…' : 'Add to the gallery' }}
+          {{ submitting() ? 'Добавляем работу…' : 'Добавить в галерею' }}
           <span aria-hidden="true">→</span>
         </button>
       </form>

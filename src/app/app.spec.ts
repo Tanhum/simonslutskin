@@ -10,13 +10,13 @@ describe('App', () => {
     }).compileComponents();
   });
 
-  it('should render the artist wordmark and navigation', () => {
+  it('should render the Russian artist wordmark and navigation', () => {
     const fixture = TestBed.createComponent(App);
     fixture.detectChanges();
 
     const compiled = fixture.nativeElement as HTMLElement;
-    expect(compiled.querySelector('.wordmark-name')?.textContent).toContain('Simon Slutskin');
-    expect(compiled.querySelector('nav')?.textContent).toContain('Gallery');
-    expect(compiled.querySelector('nav')?.textContent).toContain('Artist access');
+    expect(compiled.querySelector('.wordmark-name')?.textContent).toContain('Симон Слутскин');
+    expect(compiled.querySelector('nav')?.textContent).toContain('Галерея');
+    expect(compiled.querySelector('nav')?.textContent).toContain('Мастерская');
   });
 });

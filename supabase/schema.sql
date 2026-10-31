@@ -1,3 +1,4 @@
+-- Uploader username/password are Supabase Edge Function secrets, not database rows.
 create table if not exists public.artworks (
   id uuid primary key default gen_random_uuid(),
   title text not null check (char_length(title) between 1 and 120),

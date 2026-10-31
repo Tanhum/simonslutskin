@@ -42,7 +42,7 @@ export class UploadComponent implements OnInit, OnDestroy {
         this.checkingAccess.set(false);
       },
       error: () => {
-        this.loginError.set('Could not connect to the gallery server. Please try again.');
+        this.loginError.set('Не удалось подключиться к галерее. Попробуйте ещё раз.');
         this.checkingAccess.set(false);
       },
     });
@@ -65,8 +65,8 @@ export class UploadComponent implements OnInit, OnDestroy {
       error: (error: { status?: number }) => {
         this.loginError.set(
           error.status === 401
-            ? 'That username or password did not match. Please try again.'
-            : 'Could not sign in. Please try again in a moment.',
+            ? 'Неверное имя пользователя или пароль. Попробуйте ещё раз.'
+            : 'Не удалось войти. Попробуйте ещё раз чуть позже.',
         );
         this.signingIn.set(false);
       },
@@ -90,7 +90,7 @@ export class UploadComponent implements OnInit, OnDestroy {
     if (!acceptedTypes.includes(file.type)) {
       this.imageFile.set(null);
       this.imagePreview.set('');
-      this.uploadError.set('Choose a JPG, PNG, or WebP image.');
+      this.uploadError.set('Выберите изображение в формате JPG, PNG или WebP.');
       input.value = '';
       return;
     }
@@ -98,7 +98,7 @@ export class UploadComponent implements OnInit, OnDestroy {
     if (file.size > 10 * 1024 * 1024) {
       this.imageFile.set(null);
       this.imagePreview.set('');
-      this.uploadError.set('The image must be smaller than 10 MB.');
+      this.uploadError.set('Размер изображения не должен превышать 10 МБ.');
       input.value = '';
       return;
     }
@@ -111,7 +111,7 @@ export class UploadComponent implements OnInit, OnDestroy {
   addArtwork(): void {
     const image = this.imageFile();
     if (!image) {
-      this.uploadError.set('Please choose an image to upload.');
+      this.uploadError.set('Сначала выберите изображение для загрузки.');
       return;
     }
 
@@ -126,11 +126,11 @@ export class UploadComponent implements OnInit, OnDestroy {
         if (this.imageInput) this.imageInput.value = '';
         this.clearPreview();
         this.submitting.set(false);
-        this.uploadSuccess.set('Your artwork has been added to the gallery.');
+        this.uploadSuccess.set('Работа добавлена в галерею.');
       },
       error: (error: { error?: { error?: string } }) => {
         this.uploadError.set(
-          error.error?.error ?? 'The artwork could not be added. Please try again.',
+          error.error?.error ?? 'Не удалось добавить работу. Попробуйте ещё раз.',
         );
         this.submitting.set(false);
       },
@@ -139,8 +139,12 @@ export class UploadComponent implements OnInit, OnDestroy {
 
   signOut(): void {
     this.artworkService.signOut().subscribe({
-      next: () => this.authenticated.set(false),
-      error: () => this.uploadError.set('Could not sign out. Please try again.'),
+      next: () => {
+        this.authenticated.set(false);
+        this.uploadError.set('');
+        this.uploadSuccess.set('');
+      },
+      error: () => this.uploadError.set('Не удалось выйти. Попробуйте ещё раз.'),
     });
   }
 

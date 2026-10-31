@@ -16,6 +16,20 @@ export class GalleryComponent implements OnInit {
   readonly loading = signal(true);
   readonly error = signal('');
 
+  formatWorkCount(count: number): string {
+    const remainder100 = count % 100;
+    const remainder10 = count % 10;
+    const noun =
+      remainder100 >= 11 && remainder100 <= 14
+        ? 'работ'
+        : remainder10 === 1
+          ? 'работа'
+          : remainder10 >= 2 && remainder10 <= 4
+            ? 'работы'
+            : 'работ';
+    return `${count} ${noun}`;
+  }
+
   ngOnInit(): void {
     this.artworkService.getArtworks().subscribe({
       next: (artworks) => {
@@ -23,7 +37,7 @@ export class GalleryComponent implements OnInit {
         this.loading.set(false);
       },
       error: () => {
-        this.error.set('The collection could not be loaded. Please try again in a moment.');
+        this.error.set('Не удалось загрузить галерею. Попробуйте ещё раз чуть позже.');
         this.loading.set(false);
       },
     });

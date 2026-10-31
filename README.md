@@ -16,12 +16,14 @@ The **Angular website is hosted on Netlify**. **Supabase stores the artwork reco
    ```bash
    npx supabase login
    npx supabase link --project-ref iifivunlsbytvvgrlbmi
-   npx supabase functions deploy auth
-   npx supabase functions deploy artworks
-   npx supabase functions deploy upload-url
+   npx supabase functions deploy auth --no-verify-jwt
+   npx supabase functions deploy artworks --no-verify-jwt
+   npx supabase functions deploy upload-url --no-verify-jwt
    ```
 
    Supabase Edge Functions are the small protected API used by the static website; this does not add a Node server or any API hosting to Netlify.
+
+   For the Edge Function endpoints to respond to the browser's CORS preflight requests, deploy with `--no-verify-jwt` as shown; the functions validate the gallery's signed session themselves.
 
 ## 2. Host the Angular website on Netlify
 

@@ -151,9 +151,10 @@ function supabaseSecretKey(): string {
 
 export function supabaseSecretHeaders(extra: Record<string, string> = {}): HeadersInit {
   const secret = supabaseSecretKey();
+  const authorization = secret.startsWith('eyJ') ? { Authorization: `Bearer ${secret}` } : {};
   return {
     apikey: secret,
-    Authorization: `Bearer ${secret}`,
+    ...authorization,
     ...extra,
   };
 }

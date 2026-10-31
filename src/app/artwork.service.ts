@@ -79,7 +79,6 @@ export class ArtworkService {
             headers: {
               apikey: SUPABASE_PUBLISHABLE_KEY,
               'Content-Type': image.type,
-              'x-upsert': 'false',
             },
             responseType: 'text',
           }).pipe(map(() => imagePath)),
