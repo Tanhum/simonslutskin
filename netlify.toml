@@ -1,35 +1,6 @@
 [build]
   command = "npm run build"
   publish = "dist/simon-art-gallery/browser"
-  functions = "netlify/functions"
-
-[functions]
-  node_bundler = "esbuild"
-
-[[redirects]]
-  from = "/api/auth"
-  to = "/.netlify/functions/auth"
-  status = 200
-
-[[redirects]]
-  from = "/api/login"
-  to = "/.netlify/functions/auth?action=login"
-  status = 200
-
-[[redirects]]
-  from = "/api/logout"
-  to = "/.netlify/functions/auth?action=logout"
-  status = 200
-
-[[redirects]]
-  from = "/api/upload-url"
-  to = "/.netlify/functions/upload-url"
-  status = 200
-
-[[redirects]]
-  from = "/api/artworks"
-  to = "/.netlify/functions/artworks"
-  status = 200
 
 [[redirects]]
   from = "/*"

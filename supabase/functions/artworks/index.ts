@@ -1,0 +1,89 @@
+import {
+  errorResponse,
+  handleOptions,
+  isAuthenticated,
+  jsonResponse,
+  readJson,
+  sessionSecret,
+  supabaseRequest,
+  supabaseSecretHeaders,
+  supabaseUrl,
+} from '../_shared.ts';
+
+const fields = ['title', 'description', 'size', 'style', 'artist'] as const;
+const limits = { title: 120, description: 1000, size: 60, style: 80, artist: 100 };
+const imagePathPattern = /^uploads\/[0-9a-f-]{36}\.(jpg|png|webp)$/i;
+
+interface ArtworkRow {
+  id: string;
+  title: string;
+  description: string;
+  size: string;
+  style: string;
+  artist: string;
+  image_path: string;
+  created_at: string;
+}
+
+function toArtwork(row: ArtworkRow) {
+  const imagePath = row.image_path.split('/').map(encodeURIComponent).join('/');
+  return {
+    id: row.id,
+    title: row.title,
+    description: row.description,
+    size: row.size,
+    style: row.style,
+    artist: row.artist,
+    imageUrl: `${supabaseUrl()}/storage/v1/object/public/artworks/${imagePath}`,
+    createdAt: row.created_at,
+  };
+}
+
+Deno.serve(async (request: Request) => {
+  const options = handleOptions(request);
+  if (options) return options;
+
+  try {
+    const baseUrl = supabaseUrl();
+    if (request.method === 'GET') {
+      const rows = await supabaseRequest(
+        `${baseUrl}/rest/v1/artworks?select=id,title,description,size,style,artist,image_path,created_at&order=created_at.desc`,
+        { headers: supabaseSecretHeaders() },
+      );
+      if (!Array.isArray(rows)) throw new Error('Supabase returned an invalid artwork collection.');
+      return jsonResponse(200, rows.map((row) => toArtwork(row as ArtworkRow)));
+    }
+    if (request.method !== 'POST') return jsonResponse(405, { error: 'Method not allowed.' });
+    if (!await isAuthenticated(request, sessionSecret())) {
+      return jsonResponse(401, { error: 'Please sign in before adding artwork.' });
+    }
+
+    const body = await readJson(request);
+    const artwork: Record<string, string> = {};
+    for (const field of fields) {
+      const value = typeof body[field] === 'string' ? body[field].trim() : '';
+      if (!value || value.length > limits[field]) {
+        return jsonResponse(400, { error: 'Complete every artwork detail within the allowed lengths.' });
+      }
+      artwork[field] = value;
+    }
+    if (typeof body.imagePath !== 'string' || !imagePathPattern.test(body.imagePath)) {
+      return jsonResponse(400, { error: 'The uploaded image could not be verified.' });
+    }
+
+    const rows = await supabaseRequest(`${baseUrl}/rest/v1/artworks`, {
+      method: 'POST',
+      headers: supabaseSecretHeaders({
+        'Content-Type': 'application/json',
+        Prefer: 'return=representation',
+      }),
+      body: JSON.stringify({ ...artwork, image_path: body.imagePath }),
+    });
+    if (!Array.isArray(rows) || !rows[0]) {
+      throw new Error('Supabase did not return the saved artwork.');
+    }
+    return jsonResponse(201, toArtwork(rows[0] as ArtworkRow));
+  } catch (error) {
+    return errorResponse(error);
+  }
+});

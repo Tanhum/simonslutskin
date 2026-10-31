@@ -1,0 +1,10 @@
+project_id = "iifivunlsbytvvgrlbmi"
+
+[functions.auth]
+verify_jwt = false
+
+[functions.artworks]
+verify_jwt = false
+
+[functions.upload-url]
+verify_jwt = false

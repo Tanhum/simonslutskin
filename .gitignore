@@ -46,7 +46,6 @@ __screenshots__/
 /.env
 /.env.*
 !/.env.example
-/.netlify
 
 # System files
 .DS_Store

@@ -1,36 +1,38 @@
 # Simon Slutskin — Art Gallery
 
-The Angular gallery is hosted on Netlify. Netlify Functions handle the uploader's username/password and artwork metadata; Supabase stores the metadata and artwork images. Netlify builds the app directly from GitHub—**the Netlify CLI is not required**.
+The **Angular website is hosted on Netlify**. **Supabase stores the artwork records and images and runs the protected upload functions.** Netlify is static hosting only: it needs no API server, Netlify Functions, Supabase secret, or uploader password.
 
-## 1. Set up Supabase
+## 1. Prepare Supabase
 
-1. In Supabase, open **SQL Editor**, create a query, paste in [`supabase/schema.sql`](./supabase/schema.sql), and run it. This creates the artworks table and a public-read image bucket. Visitors can view the collection; only the server-side Netlify Functions can add artwork.
-2. In **Project Settings → API Keys**, copy the project URL and public publishable key.
-3. Rotate the Supabase secret key that was shared in chat. Use only its replacement in Netlify’s private environment-variable settings; never commit it or put it in Angular code.
+1. In the Supabase project's SQL Editor, run [`supabase/schema.sql`](./supabase/schema.sql). This creates the artwork table and public-read `artworks` Storage bucket.
+2. The Supabase secret key shared in chat must be revoked. Rotate it in **Project Settings → API Keys**. Supabase makes its current server-side key available to its Edge Functions; the app does not copy it into the repository or Netlify.
+3. In **Supabase → Edge Functions → Secrets**, set only:
+   - `ADMIN_USERNAME`: the username you choose for your dad.
+   - `ADMIN_PASSWORD`: a strong password you choose for your dad.
 
-## 2. Deploy using Netlify
+   The functions use Supabase's built-in server key for database/storage requests and to sign short-lived login sessions. The key stays inside Supabase.
+4. Deploy the three functions in `supabase/functions` to project `iifivunlsbytvvgrlbmi`. One way is with the Supabase CLI:
 
-1. Push this repository to GitHub and import `Tanhum/simonslutskin` into Netlify.
-2. Netlify reads [`netlify.toml`](./netlify.toml) for the build command (`npm run build`), publish folder, and serverless functions. You do not need to configure a separate Node server or install the Netlify CLI.
-3. In the Netlify site’s **Environment variables** settings, add:
+   ```bash
+   npx supabase login
+   npx supabase link --project-ref iifivunlsbytvvgrlbmi
+   npx supabase functions deploy auth
+   npx supabase functions deploy artworks
+   npx supabase functions deploy upload-url
+   ```
 
-   | Name | Value |
-   | --- | --- |
-   | `SUPABASE_URL` | Supabase project URL |
-   | `SUPABASE_PUBLISHABLE_KEY` | Public publishable key |
-   | `SUPABASE_SECRET_KEY` | Newly rotated Supabase secret key; server-side only |
-   | `ADMIN_USERNAME` | Username your dad chooses |
-   | `ADMIN_PASSWORD` | Strong, private uploader password |
-   | `SESSION_SECRET` | A random secret at least 32 bytes long |
+   Supabase Edge Functions are the small protected API used by the static website; this does not add a Node server or any API hosting to Netlify.
 
-   Generate `SESSION_SECRET` on your computer with `openssl rand -base64 48`; enter it directly in Netlify and do not commit it.
+## 2. Host the Angular website on Netlify
 
-4. Trigger a deploy after adding the variables. Open the deployed site's `/upload` page and sign in using `ADMIN_USERNAME` and `ADMIN_PASSWORD`.
+Import `Tanhum/simonslutskin` into Netlify. Its build settings are in [`netlify.toml`](./netlify.toml): `npm run build` publishes `dist/simon-art-gallery/browser`. The Supabase URL and publishable key in `src/app/supabase.config.ts` are public browser configuration. **Do not add private Supabase keys, usernames, or passwords to Netlify.**
 
-## Local frontend preview
-
-Run `npm install` and `npm run dev` to preview the Angular frontend. The serverless API functions run on the deployed Netlify site; configure the Supabase schema and Netlify environment variables before testing sign-in or uploads on the deployment.
+When the Netlify site and Supabase functions are deployed, open `/upload` and sign in with the username and password you set in Supabase.
 
 ## Upload flow
 
-The uploader signs in at `/upload`. A Netlify Function verifies the username and password and sets an HTTP-only, same-site session cookie. The browser requests a one-time Supabase signed upload URL, then sends a JPG, PNG, or WebP image (up to 10 MB) directly to Supabase Storage. A server-side function stores the artwork details and image path in Supabase. The public gallery reads those records and displays the images.
+The browser sends the username and password to Supabase's `auth` Edge Function. It returns a short-lived signed session. The browser asks `upload-url` for a one-time Supabase Storage upload URL, then uploads the JPG, PNG, or WebP (up to 10 MB) directly from the browser to Supabase Storage. The `artworks` function saves the artwork details. The gallery reads those records and displays the public images.
+
+## Local frontend preview
+
+Run `npm install` and `npm run dev`. The site will use the deployed Supabase functions configured in `src/app/supabase.config.ts`.
