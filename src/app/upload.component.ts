@@ -1,7 +1,7 @@
 import { Component, OnDestroy, OnInit, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
-import { ArtworkDetails } from './artwork';
+import { Artwork, ArtworkDetails } from './artwork';
 import { ArtworkService } from './artwork.service';
 
 @Component({
@@ -24,6 +24,11 @@ export class UploadComponent implements OnInit, OnDestroy {
   readonly loginError = signal('');
   readonly uploadError = signal('');
   readonly uploadSuccess = signal('');
+  readonly existingArtworks = signal<Artwork[]>([]);
+  readonly loadingArtworks = signal(false);
+  readonly deletingArtworkId = signal('');
+  readonly managementError = signal('');
+  readonly managementMessage = signal('');
 
   username = '';
   password = '';
@@ -40,6 +45,7 @@ export class UploadComponent implements OnInit, OnDestroy {
       next: (authenticated) => {
         this.authenticated.set(authenticated);
         this.checkingAccess.set(false);
+        if (authenticated) this.loadExistingArtworks();
       },
       error: () => {
         this.loginError.set('Не удалось подключиться к галерее. Попробуйте ещё раз.');
@@ -61,6 +67,7 @@ export class UploadComponent implements OnInit, OnDestroy {
         this.password = '';
         this.authenticated.set(true);
         this.signingIn.set(false);
+        this.loadExistingArtworks();
       },
       error: (error: { status?: number }) => {
         this.loginError.set(
@@ -127,6 +134,7 @@ export class UploadComponent implements OnInit, OnDestroy {
         this.clearPreview();
         this.submitting.set(false);
         this.uploadSuccess.set('Работа добавлена в галерею.');
+        this.loadExistingArtworks();
       },
       error: (error: { error?: { error?: string } }) => {
         this.uploadError.set(
@@ -143,8 +151,51 @@ export class UploadComponent implements OnInit, OnDestroy {
         this.authenticated.set(false);
         this.uploadError.set('');
         this.uploadSuccess.set('');
+        this.existingArtworks.set([]);
       },
       error: () => this.uploadError.set('Не удалось выйти. Попробуйте ещё раз.'),
+    });
+  }
+
+  deleteArtwork(artwork: Artwork): void {
+    const confirmed = window.confirm(
+      `Удалить работу «${artwork.title}» из галереи? Это действие нельзя отменить.`,
+    );
+    if (!confirmed) return;
+
+    this.deletingArtworkId.set(artwork.id);
+    this.managementError.set('');
+    this.managementMessage.set('');
+    this.artworkService.deleteArtwork(artwork.id).subscribe({
+      next: () => {
+        this.existingArtworks.update((artworks) =>
+          artworks.filter((item) => item.id !== artwork.id),
+        );
+        this.managementMessage.set(`Работа «${artwork.title}» удалена из галереи.`);
+        this.deletingArtworkId.set('');
+      },
+      error: (error: { error?: { error?: string } }) => {
+        this.managementError.set(
+          error.error?.error ?? 'Не удалось удалить работу. Попробуйте ещё раз.',
+        );
+        this.deletingArtworkId.set('');
+        this.loadExistingArtworks(false);
+      },
+    });
+  }
+
+  private loadExistingArtworks(clearError = true): void {
+    this.loadingArtworks.set(true);
+    if (clearError) this.managementError.set('');
+    this.artworkService.getArtworks().subscribe({
+      next: (artworks) => {
+        this.existingArtworks.set(artworks);
+        this.loadingArtworks.set(false);
+      },
+      error: () => {
+        this.managementError.set('Не удалось загрузить список работ для управления.');
+        this.loadingArtworks.set(false);
+      },
     });
   }
 

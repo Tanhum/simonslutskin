@@ -288,6 +288,18 @@ h2 {
   max-width: 245px;
 }
 
+.management-list {
+  list-style: none;
+  padding: 0;
+}
+
+.delete-button {
+  background: transparent;
+  border: 0;
+  color: #a33029;
+  cursor: pointer;
+}
+
 @media (max-width: 540px) {
   .upload-page {
     padding: 54px 18px 20px;

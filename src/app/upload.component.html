@@ -127,6 +127,43 @@
           <span aria-hidden="true">→</span>
         </button>
       </form>
+
+      <section class="artwork-management" aria-labelledby="artwork-management-heading">
+        <div class="management-heading">
+          <div>
+            <h3 id="artwork-management-heading">Работы в галерее</h3>
+            <p>Удаление убирает работу и её изображение из галереи.</p>
+          </div>
+        </div>
+        @if (managementError()) {
+          <p class="form-error" role="alert">{{ managementError() }}</p>
+        }
+        @if (managementMessage()) {
+          <p class="form-success" role="status">{{ managementMessage() }}</p>
+        }
+        @if (loadingArtworks()) {
+          <p class="management-empty" role="status">Загружаем список работ…</p>
+        } @else if (existingArtworks().length === 0) {
+          <p class="management-empty">В галерее пока нет работ.</p>
+        } @else {
+          <ul class="management-list">
+            @for (artwork of existingArtworks(); track artwork.id) {
+              <li>
+                <span>{{ artwork.title }}</span>
+                <button
+                  type="button"
+                  class="delete-button"
+                  [disabled]="!!deletingArtworkId()"
+                  (click)="deleteArtwork(artwork)"
+                  [attr.aria-label]="'Удалить работу: ' + artwork.title"
+                >
+                  {{ deletingArtworkId() === artwork.id ? 'Удаляем…' : 'Удалить' }}
+                </button>
+              </li>
+            }
+          </ul>
+        }
+      </section>
     </section>
   }
 </section>

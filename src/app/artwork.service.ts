@@ -92,4 +92,11 @@ export class ArtworkService {
         ),
       );
   }
+
+  deleteArtwork(id: string): Observable<void> {
+    return this.http
+      .delete<void>(`${SUPABASE_FUNCTIONS_URL}/artworks?id=${encodeURIComponent(id)}`, {
+        headers: this.functionHeaders,
+      });
+  }
 }

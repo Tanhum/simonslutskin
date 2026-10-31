@@ -35,7 +35,11 @@ Netlify automatically rebuilds the Angular website when you push to GitHub. Supa
 
 ## Upload flow
 
-The browser sends the username and password to Supabase's `auth` Edge Function. It returns a short-lived signed session. The browser asks `upload-url` for a one-time Supabase Storage upload URL, then uploads the JPG, PNG, or WebP (up to 10 MB) directly from the browser to Supabase Storage. The `artworks` function saves the artwork details. The gallery reads those records and displays the public images.
+The browser sends the username and password to Supabase's `auth` Edge Function. It returns a short-lived signed session. The browser asks `upload-url` for a one-time Supabase Storage upload URL, then uploads the JPG, PNG, or WebP (up to 10 MB) directly from the browser to Supabase Storage. The `artworks` function saves the artwork details. The gallery reads those records and displays the public images. After signing in to `/upload`, the artist can also remove a work; this deletes its gallery record and stored image.
+
+## Free-plan inactivity
+
+Supabase may pause Free-plan projects after 7 days of low activity. A paused project can be restored from the Supabase dashboard; upgrading to Pro prevents inactivity pauses. Check Supabase's [production availability guidance](https://supabase.com/docs/guides/deployment/going-into-prod#availability) for current plan details.
 
 ## Local frontend preview
 

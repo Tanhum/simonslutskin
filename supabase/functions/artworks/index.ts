@@ -13,6 +13,7 @@ import {
 const fields = ['title', 'description', 'size', 'style', 'artist'] as const;
 const limits = { title: 120, description: 1000, size: 60, style: 80, artist: 100 };
 const imagePathPattern = /^uploads\/[0-9a-f-]{36}\.(jpg|png|webp)$/i;
+const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 interface ArtworkRow {
   id: string;
@@ -53,11 +54,51 @@ Deno.serve(async (request: Request) => {
       if (!Array.isArray(rows)) throw new Error('Supabase returned an invalid artwork collection.');
       return jsonResponse(200, rows.map((row) => toArtwork(row as ArtworkRow)));
     }
-    if (request.method !== 'POST') {
+    if (request.method !== 'POST' && request.method !== 'DELETE') {
       return jsonResponse(405, { error: 'Метод запроса не поддерживается.' });
     }
     if (!await isAuthenticated(request, sessionSecret())) {
-      return jsonResponse(401, { error: 'Войдите в мастерскую, чтобы добавить работу.' });
+      return jsonResponse(401, { error: 'Войдите в мастерскую, чтобы управлять работами.' });
+    }
+
+    if (request.method === 'DELETE') {
+      const id = new URL(request.url).searchParams.get('id') ?? '';
+      if (!uuidPattern.test(id)) {
+        return jsonResponse(400, { error: 'Не удалось проверить выбранную работу.' });
+      }
+
+      const rows = await supabaseRequest(
+        `${baseUrl}/rest/v1/artworks?id=eq.${encodeURIComponent(id)}&select=id,image_path`,
+        {
+          method: 'DELETE',
+          headers: supabaseSecretHeaders({
+            Prefer: 'return=representation',
+          }),
+        },
+      );
+      if (!Array.isArray(rows) || !rows[0]) {
+        return jsonResponse(404, { error: 'Эта работа уже отсутствует в галерее.' });
+      }
+
+      const imagePath = (rows[0] as Pick<ArtworkRow, 'image_path'>).image_path;
+      if (!imagePathPattern.test(imagePath)) {
+        throw new Error('Supabase returned an invalid artwork image path.');
+      }
+
+      try {
+        await supabaseRequest(`${baseUrl}/storage/v1/object/artworks`, {
+          method: 'DELETE',
+          headers: supabaseSecretHeaders({ 'Content-Type': 'application/json' }),
+          body: JSON.stringify({ prefixes: [imagePath] }),
+        });
+      } catch (error) {
+        console.error('Artwork record was deleted but its image could not be removed:', error);
+        return jsonResponse(502, {
+          error: 'Работа удалена из галереи, но изображение осталось в хранилище Supabase.',
+        });
+      }
+
+      return jsonResponse(200, { deleted: true });
     }
 
     const body = await readJson(request);
