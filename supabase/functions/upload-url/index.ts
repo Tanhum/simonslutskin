@@ -47,11 +47,18 @@ Deno.serve(async (request: Request) => {
       throw new Error('Supabase did not return a signed upload URL.');
     }
 
-    const signedPath = String(result.url);
-    const uploadUrl = signedPath.startsWith('http')
-      ? signedPath
-      : `${baseUrl}/storage/v1${signedPath}`;
-    return jsonResponse(200, { uploadUrl, imagePath });
+    const signedResult = result as { url: string; token?: string };
+    const signedPath = signedResult.url;
+    const uploadUrl = new URL(
+      signedPath.startsWith('http') ? signedPath : `${baseUrl}/storage/v1${signedPath}`,
+    );
+    if (typeof signedResult.token === 'string') {
+      uploadUrl.searchParams.set('token', signedResult.token);
+    }
+    if (!uploadUrl.searchParams.has('token')) {
+      throw new Error('Supabase did not return a signed upload token.');
+    }
+    return jsonResponse(200, { uploadUrl: uploadUrl.toString(), imagePath });
   } catch (error) {
     return errorResponse(error);
   }
