@@ -29,6 +29,8 @@ Import `Tanhum/simonslutskin` into Netlify. Its build settings are in [`netlify.
 
 When the Netlify site and Supabase functions are deployed, open `/upload` and sign in with the username and password you set in Supabase.
 
+Netlify automatically rebuilds the Angular website when you push to GitHub. Supabase Edge Functions are deployed to Supabase separately with the Supabase CLI commands above; they do not run on Netlify.
+
 ## Upload flow
 
 The browser sends the username and password to Supabase's `auth` Edge Function. It returns a short-lived signed session. The browser asks `upload-url` for a one-time Supabase Storage upload URL, then uploads the JPG, PNG, or WebP (up to 10 MB) directly from the browser to Supabase Storage. The `artworks` function saves the artwork details. The gallery reads those records and displays the public images.
