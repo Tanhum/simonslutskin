@@ -1,35 +1,36 @@
 # Simon Slutskin — Art Gallery
 
-A two-page Angular gallery with a password-protected artist area. Gallery artwork is stored on the server only after the artist uploads it; the existing artwork files in the project folder are not preloaded or copied into the site. The artist portrait is used on the gallery landing page.
+The Angular gallery is hosted on Netlify. Netlify Functions handle the uploader's username/password and artwork metadata; Supabase stores the metadata and artwork images. Netlify builds the app directly from GitHub—**the Netlify CLI is not required**.
 
-## Run locally
+## 1. Set up Supabase
 
-Use Node.js 20.19 or newer. Install dependencies with `npm install`, then start the API and Angular development server in separate terminals.
+1. In Supabase, open **SQL Editor**, create a query, paste in [`supabase/schema.sql`](./supabase/schema.sql), and run it. This creates the artworks table and a public-read image bucket. Visitors can view the collection; only the server-side Netlify Functions can add artwork.
+2. In **Project Settings → API Keys**, copy the project URL and public publishable key.
+3. Rotate the Supabase secret key that was shared in chat. Use only its replacement in Netlify’s private environment-variable settings; never commit it or put it in Angular code.
 
-In the first terminal, set a private password and start the API:
+## 2. Deploy using Netlify
 
-```bash
-read -s ADMIN_PASSWORD
-export ADMIN_PASSWORD
-npm run api
-```
+1. Push this repository to GitHub and import `Tanhum/simonslutskin` into Netlify.
+2. Netlify reads [`netlify.toml`](./netlify.toml) for the build command (`npm run build`), publish folder, and serverless functions. You do not need to configure a separate Node server or install the Netlify CLI.
+3. In the Netlify site’s **Environment variables** settings, add:
 
-In the second terminal:
+   | Name | Value |
+   | --- | --- |
+   | `SUPABASE_URL` | Supabase project URL |
+   | `SUPABASE_PUBLISHABLE_KEY` | Public publishable key |
+   | `SUPABASE_SECRET_KEY` | Newly rotated Supabase secret key; server-side only |
+   | `ADMIN_USERNAME` | Username your dad chooses |
+   | `ADMIN_PASSWORD` | Strong, private uploader password |
+   | `SESSION_SECRET` | A random secret at least 32 bytes long |
 
-```bash
-npm run dev
-```
+   Generate `SESSION_SECRET` on your computer with `openssl rand -base64 48`; enter it directly in Netlify and do not commit it.
 
-Open [http://localhost:4200](http://localhost:4200). The API listens on `127.0.0.1:3000`; Angular proxies `/api` requests to it. The server refuses to start without `ADMIN_PASSWORD`.
+4. Trigger a deploy after adding the variables. Open the deployed site's `/upload` page and sign in using `ADMIN_USERNAME` and `ADMIN_PASSWORD`.
 
-Uploaded images and the artwork index are stored in `gallery-data/`. Set `GALLERY_DATA_DIR` to use a different persistent storage location.
+## Local frontend preview
 
-## Production
+Run `npm install` and `npm run dev` to preview the Angular frontend. The serverless API functions run on the deployed Netlify site; configure the Supabase schema and Netlify environment variables before testing sign-in or uploads on the deployment.
 
-Build the Angular site with `npm run build`, then start the server with `npm start` and `ADMIN_PASSWORD` set. The server serves the built site and API together on `127.0.0.1:3000`. Put it behind an HTTPS reverse proxy for public hosting; production cookies are marked `Secure`.
+## Upload flow
 
-The artist password is verified by the server, not included in Angular code. Sign-in is rate-limited, and the session cookie is HTTP-only, same-site, and expires after 12 hours. The public gallery is viewable without signing in; only adding artwork requires the password.
-
-## Add an artwork
-
-Visit `/upload`, sign in, and choose a JPG, PNG, or WebP image (up to 10 MB). Enter the artwork name, artist, size, and style or medium; the description is optional. The new artwork appears in the gallery automatically.
+The uploader signs in at `/upload`. A Netlify Function verifies the username and password and sets an HTTP-only, same-site session cookie. The browser requests a one-time Supabase signed upload URL, then sends a JPG, PNG, or WebP image (up to 10 MB) directly to Supabase Storage. A server-side function stores the artwork details and image path in Supabase. The public gallery reads those records and displays the images.

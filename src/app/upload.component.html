@@ -11,8 +11,17 @@
     <section class="access-card">
       <span class="lock-mark" aria-hidden="true">✳</span>
       <h2>Artist access</h2>
-      <p>This space is reserved for Simon. Enter your password to continue.</p>
+      <p>This space is reserved for Simon. Enter your username and password to continue.</p>
       <form (ngSubmit)="signIn()">
+        <label for="username">Username</label>
+        <input
+          id="username"
+          name="username"
+          type="text"
+          [(ngModel)]="username"
+          autocomplete="username"
+          required
+        />
         <label for="password">Password</label>
         <input
           id="password"

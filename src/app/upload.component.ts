@@ -25,6 +25,7 @@ export class UploadComponent implements OnInit, OnDestroy {
   readonly uploadError = signal('');
   readonly uploadSuccess = signal('');
 
+  username = '';
   password = '';
   details: ArtworkDetails = {
     title: '',
@@ -54,8 +55,9 @@ export class UploadComponent implements OnInit, OnDestroy {
   signIn(): void {
     this.loginError.set('');
     this.signingIn.set(true);
-    this.artworkService.signIn(this.password).subscribe({
+    this.artworkService.signIn(this.username, this.password).subscribe({
       next: () => {
+        this.username = '';
         this.password = '';
         this.authenticated.set(true);
         this.signingIn.set(false);
@@ -63,7 +65,7 @@ export class UploadComponent implements OnInit, OnDestroy {
       error: (error: { status?: number }) => {
         this.loginError.set(
           error.status === 401
-            ? 'That password did not match. Please try again.'
+            ? 'That username or password did not match. Please try again.'
             : 'Could not sign in. Please try again in a moment.',
         );
         this.signingIn.set(false);

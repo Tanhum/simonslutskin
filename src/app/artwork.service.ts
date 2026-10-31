@@ -1,10 +1,16 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
-import { Observable, map } from 'rxjs';
+import { Observable, map, switchMap } from 'rxjs';
 import { Artwork, ArtworkDetails } from './artwork';
 
 interface AuthResponse {
   authenticated: boolean;
+}
+
+interface SignedUploadResponse {
+  uploadUrl: string;
+  publicKey: string;
+  imagePath: string;
 }
 
 @Injectable({ providedIn: 'root' })
@@ -22,8 +28,8 @@ export class ArtworkService {
       .pipe(map((response) => response.authenticated));
   }
 
-  signIn(password: string): Observable<void> {
-    return this.http.post<void>('/api/login', { password }, this.options);
+  signIn(username: string, password: string): Observable<void> {
+    return this.http.post<void>('/api/login', { username, password }, this.options);
   }
 
   signOut(): Observable<void> {
@@ -31,13 +37,26 @@ export class ArtworkService {
   }
 
   addArtwork(details: ArtworkDetails, image: File): Observable<Artwork> {
-    const body = new FormData();
-    body.append('title', details.title);
-    body.append('description', details.description);
-    body.append('size', details.size);
-    body.append('style', details.style);
-    body.append('artist', details.artist);
-    body.append('image', image);
-    return this.http.post<Artwork>('/api/artworks', body, this.options);
+    return this.http
+      .post<SignedUploadResponse>(
+        '/api/upload-url',
+        { contentType: image.type, fileName: image.name },
+        this.options,
+      )
+      .pipe(
+        switchMap(({ uploadUrl, publicKey, imagePath }) =>
+          this.http.put(uploadUrl, image, {
+            headers: {
+              apikey: publicKey,
+              'Content-Type': image.type,
+              'x-upsert': 'false',
+            },
+            responseType: 'text',
+          }).pipe(map(() => imagePath)),
+        ),
+        switchMap((imagePath) =>
+          this.http.post<Artwork>('/api/artworks', { ...details, imagePath }, this.options),
+        ),
+      );
   }
 }
