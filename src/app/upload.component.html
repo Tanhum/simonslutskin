@@ -1,0 +1,123 @@
+<section class="upload-page">
+  <div class="page-heading">
+    <p class="eyebrow">The artist’s studio</p>
+    <h1>Add a new <em>work.</em></h1>
+    <p class="page-intro">A quiet place to keep the collection growing.</p>
+  </div>
+
+  @if (checkingAccess()) {
+    <p class="status-message" role="status">Checking artist access…</p>
+  } @else if (!authenticated()) {
+    <section class="access-card">
+      <span class="lock-mark" aria-hidden="true">✳</span>
+      <h2>Artist access</h2>
+      <p>This space is reserved for Simon. Enter your password to continue.</p>
+      <form (ngSubmit)="signIn()">
+        <label for="password">Password</label>
+        <input
+          id="password"
+          name="password"
+          type="password"
+          [(ngModel)]="password"
+          autocomplete="current-password"
+          required
+        />
+        @if (loginError()) {
+          <p class="form-error" role="alert">{{ loginError() }}</p>
+        }
+        <button class="primary-button" type="submit" [disabled]="signingIn()">
+          {{ signingIn() ? 'Checking…' : 'Enter the studio' }}
+          <span aria-hidden="true">→</span>
+        </button>
+      </form>
+      <a class="back-link" routerLink="/">← Back to the gallery</a>
+    </section>
+  } @else {
+    <section class="editor-card">
+      <div class="editor-heading">
+        <div>
+          <h2>Artwork details</h2>
+          <p>Share a new piece with the collection.</p>
+        </div>
+        <button type="button" class="sign-out" (click)="signOut()">Sign out</button>
+      </div>
+
+      <form class="artwork-form" (ngSubmit)="addArtwork()">
+        <label class="image-picker" for="image">
+          @if (imagePreview()) {
+            <img class="preview-image" [src]="imagePreview()" alt="Preview of selected artwork" />
+            <span class="change-image">Choose a different image</span>
+          } @else {
+            <span class="upload-icon" aria-hidden="true">↑</span>
+            <strong>Choose an artwork image</strong>
+            <span>JPG, PNG, or WebP · up to 10 MB</span>
+          }
+        </label>
+        <input
+          class="visually-hidden"
+          id="image"
+          name="image"
+          type="file"
+          accept="image/jpeg,image/png,image/webp"
+          (change)="selectImage($event)"
+        />
+
+        <div class="field-grid">
+          <div class="field">
+            <label for="title">Artwork name <span>*</span></label>
+            <input id="title" name="title" [(ngModel)]="details.title" maxlength="120" required />
+          </div>
+          <div class="field">
+            <label for="artist">Artist name <span>*</span></label>
+            <input id="artist" name="artist" [(ngModel)]="details.artist" maxlength="100" required />
+          </div>
+          <div class="field">
+            <label for="size">Size <span>*</span></label>
+            <input
+              id="size"
+              name="size"
+              [(ngModel)]="details.size"
+              placeholder="e.g. 60 × 80 cm"
+              maxlength="60"
+              required
+            />
+          </div>
+          <div class="field">
+            <label for="style">Style or medium <span>*</span></label>
+            <input
+              id="style"
+              name="style"
+              [(ngModel)]="details.style"
+              placeholder="e.g. Oil on canvas"
+              maxlength="80"
+              required
+            />
+          </div>
+          <div class="field field-wide">
+            <label for="description">Description <span>*</span></label>
+            <textarea
+              id="description"
+              name="description"
+              [(ngModel)]="details.description"
+              rows="4"
+              maxlength="1000"
+              placeholder="A few words about this work…"
+              required
+            ></textarea>
+          </div>
+        </div>
+
+        @if (uploadError()) {
+          <p class="form-error" role="alert">{{ uploadError() }}</p>
+        }
+        @if (uploadSuccess()) {
+          <p class="form-success" role="status">{{ uploadSuccess() }}</p>
+        }
+        <button class="primary-button submit-button" type="submit" [disabled]="submitting()">
+          {{ submitting() ? 'Adding artwork…' : 'Add to the gallery' }}
+          <span aria-hidden="true">→</span>
+        </button>
+      </form>
+    </section>
+  }
+</section>
